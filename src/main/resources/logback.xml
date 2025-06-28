@@ -1,0 +1,57 @@
+<configuration>
+
+    <!-- JSON logging style for Data Dog. Use environment variable LOGGER=asyncJsonAppender-->
+    <appender name="jsonAppender" class="ch.qos.logback.core.ConsoleAppender">
+        <encoder class="net.logstash.logback.encoder.LogstashEncoder">
+            <fieldNames>
+                <timestamp>datetime</timestamp>
+                <logger>class_name</logger>
+                <stackTrace>stack</stackTrace>
+                <levelValue>[ignore]</levelValue>
+                <version>[ignore]</version>
+                <thread>thread</thread>
+            </fieldNames>
+            <includeMdc>true</includeMdc>
+        </encoder>
+    </appender>
+
+    <!-- Plain text logging for local development.  Use environment variable LOGGER=asyncConsoleAppender -->
+    <appender name="consoleAppender" class="ch.qos.logback.core.ConsoleAppender">
+        <encoder>
+            <pattern>%date %-25.25thread{15} %highlight(%-5level) %-25.25logger{15} - %X{Trace-ID} - %X{dd.trace_id:-0} - %mdc - %X{dd.span_id:-0} - %message%n%xException{10}</pattern>
+        </encoder>
+        <filter class="ch.qos.logback.classic.filter.ThresholdFilter">
+            <level>INFO</level>
+        </filter>
+    </appender>
+
+
+    <appender name="asyncConsoleAppender" class="ch.qos.logback.classic.AsyncAppender">
+        <appender-ref ref="consoleAppender" />
+        <discardingThreshold>0</discardingThreshold>
+        <queueSize>256</queueSize>
+        <neverBlock>false</neverBlock>
+        <includeCallerData>false</includeCallerData>
+    </appender>
+
+    <appender name="asyncJsonAppender" class="ch.qos.logback.classic.AsyncAppender">
+        <appender-ref ref="jsonAppender" />
+        <discardingThreshold>0</discardingThreshold>
+        <queueSize>256</queueSize>
+        <neverBlock>false</neverBlock>
+        <includeCallerData>false</includeCallerData>
+    </appender>
+
+    <!-- Uses INFO log level per default. If you want to use another root level, use environment variable e.g.: LOG_LEVEL=DEBUG-->
+    <root level="${LOG_LEVEL:-INFO}">
+        <!-- Uses json log output per default. Put environment variable LOGGER=asyncConsoleAppender for nice local output. -->
+        <appender-ref ref="${LOGGER:-asyncJsonAppender}"/>
+    </root>
+
+    <logger name="org.springframework.web.filter.CommonsRequestLoggingFilter">
+        <level value="DEBUG" />
+    </logger>
+
+    <shutdownHook class="ch.qos.logback.core.hook.DelayingShutdownHook"/>
+
+</configuration>

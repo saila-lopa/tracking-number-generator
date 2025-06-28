@@ -1,0 +1,19 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: springboot
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: springboot
+  template:
+    metadata:
+      labels:
+        app: springboot
+    spec:
+      containers:
+        - name: springboot
+          image: us-central1-docker.pkg.dev/alien-hour-464115-d9/springboot-repo/springboot:v1.0.2
+          ports:
+            - containerPort: 8080

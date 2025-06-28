@@ -1,10 +1,22 @@
 spring:
   application:
     name: tracking-id-generator
+  springdoc:
+    swagger-ui:
+      path: /swagger-ui.html
+  web:
+    resources:
+      add-mappings: true
+  profiles:
+    default: local
+  data:
+    redis:
+      host: ${REDIS_HOST:my-redis-master.default.svc.cluster.local}
+      port: ${REDIS_PORT:6379}
 server:
-  port: 8081
+  port: 8080
 management:
-    endpoints:
-        web:
-        exposure:
-            include: health,info
+  endpoints:
+    web:
+      exposure:
+        include: health,info
