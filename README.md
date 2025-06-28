@@ -66,8 +66,8 @@ GET /next-tracking-number
 #### Local Development
 1. **Clone the repository:**
    ```sh
-   git clone <your-repo-url>
-   cd tracking-api-webflux-java
+   git clone git@github.com:saila-lopa/tracking-number-generator.git
+   cd tracking-number-generator
    ```
 2. **Build the project:**
    ```sh
@@ -92,11 +92,11 @@ GET /next-tracking-number
 To run the application in a Docker container, follow these steps:
 1. **Build Docker image:**
    ```sh
-   docker build -t tracking-api-webflux-java .
+   docker build -t tracking-number-generator .
    ```
 2. **Run Docker container:**
    ```sh
-   docker run -p 8080:8080 tracking-api-webflux-java
+   docker run -p 8080:8080 tracking-number-generator
    ```
 
 ### Testing
@@ -112,4 +112,54 @@ To run the application in a Docker container, follow these steps:
 ### Deployed Application
 - **URL:** http://34.70.109.139/swagger-ui.html
 
+### Results
+The test cases in this repository initiated upto 100000 request to the number generator, and 
+tested the uniqueness of those numbers. All the generated numbers were unique, indicating
+the correctness of the implementation.
 
+We also ran some load tests using k6. This following configuration was used in local environments:
+```javascript
+import http from 'k6/http';
+import { check, sleep } from 'k6';
+
+export let options = {
+    stages: [
+        { duration: '5s', target: 500 },    // ramp up to 500 VUs
+        { duration: '5s', target: 1200 },   // ramp up to 1200 VUs
+        { duration: '10s', target: 1200 },   // stay at 1200 VUs
+        { duration: '2s', target: 0 },    // ramp down to 0 VUs
+    ],
+};
+
+export default function () {
+    const url = 'http://localhost:8081/next-tracking-number?origin_country_id=MY&destination_country_id=ID&weight=2.211&created_at=2018-11-20T19%3A29%3A32%2B08%3A00&customer_id=4dcccfe6-fc76-4adc-84d0-067982c24805&customer_name=RedBox%20Logistics&customer_slug=redbox-logistics';
+    let res = http.get(url, {timeout: '3s'});
+    check(res, {
+        'status is 200': (r) => r.status === 200,
+    });
+}
+````
+
+#### Local results
+
+![Local Load Test Result](local_load_test_result.png)
+
+
+#### Deployed results
+![Deployed Load Test Result](server_load_test_results.png)
+
+### Note for Deployed results
+The outcome in the deployed environment can be improved by increasing
+the resources allocated to the server and increasing the number of pods 
+in the kubernetes cluster. In the deployed environment, we had the following configuration:
+```yaml
+resources:
+  limits:
+    ephemeral-storage: 1Gi
+  requests:
+    cpu: 500m
+    ephemeral-storage: 1Gi
+    memory: 2Gi
+```
+
+And two api service pods were running in the kubernetes cluster.
