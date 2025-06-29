@@ -83,10 +83,10 @@ GET /next-tracking-number
    ```sh
    docker run -d --name redis -p 6379:6379 redis
    ```
-4. **If you have a different redis configuration, Create a `.env` file in the root directory with the following content:**
+4. **Create a `.env` file in the root directory with the following content:**
    ```env
-   REDIS_HOST=YOUR_REDIS_HOST
-   REDIS_PORT=YOUR_REDIS_PORT
+   REDIS_HOST=localhost
+   REDIS_PORT=6379
    ```
 3. **Run the application:**
    ```sh
