@@ -3,12 +3,12 @@
 ### Overview
 This project implements a scalable, efficient RESTful API for generating 
 unique tracking numbers for parcels. Built with Spring Boot(3.5.3) and
-Spring Framework, it is designed for high concurrency and horizontal 
+Spring WebFlux, it is designed for high concurrency and horizontal 
 scalability.
 
 ### Functional Features
-- **GET /next-tracking-number** endpoint to generate unique tracking numbers
-- Generated tracking numbers match the pattern: `^[A-Z0-9]{1,16}$`
+- **GET /next-tracking-number** endpoint to generate unique tracking numbers along with created_at timestamp.
+- Generated tracking numbers match the pattern: `^[A-Z0-9]{1,16}$`.
 - Ensures uniqueness across multiple requests and instances
   - **Uniqueness Guarantee:** The tracking number generation logic uses a monotonically increasing counter
   to guarantee uniqueness. The number is then encoded using a bijective method using a java library from
@@ -17,11 +17,17 @@ scalability.
   counter is maintained in a distributed cache(Redis). To reduce network calls to redis,
   a local counter 
   is used to prefetch next tracking numbers in batches. 
+- URL parameters validation in the API.
 
 ### Non-functional Features
-- Low latency in tracking number generation
-- Handles high concurrency and is horizontally scalable
-- Uses best practices in project structure and configuration
+- Low latency in tracking number generation.
+- Handles high concurrency and is horizontally scalable.
+- Fault tolerance of the monotonically increasing counter is ensured by using managed persistent redis service. 
+Backup and replication 
+ can be configured in the redis service to ensure that the counter value is not lost in case of a failure. To ensure
+ further fault tolerance, we can use Redis function to backup counter value to another persistent storage after every update.
+ Since the api server fetched the next 10000 tracking numbers in a batch, the counter value is updated only once 
+ in every 10000 requests.
 
 ### API Specification
 Interactive API documentation is available here
@@ -132,7 +138,7 @@ export let options = {
 };
 
 export default function () {
-    const url = 'http://localhost:8081/next-tracking-number?origin_country_id=MY&destination_country_id=ID&weight=2.211&created_at=2018-11-20T19%3A29%3A32%2B08%3A00&customer_id=4dcccfe6-fc76-4adc-84d0-067982c24805&customer_name=RedBox%20Logistics&customer_slug=redbox-logistics';
+    const url = 'http://localhost:8080/next-tracking-number?origin_country_id=MY&destination_country_id=ID&weight=2.211&created_at=2018-11-20T19%3A29%3A32%2B08%3A00&customer_id=4dcccfe6-fc76-4adc-84d0-067982c24805&customer_name=RedBox%20Logistics&customer_slug=redbox-logistics';
     let res = http.get(url, {timeout: '3s'});
     check(res, {
         'status is 200': (r) => r.status === 200,
